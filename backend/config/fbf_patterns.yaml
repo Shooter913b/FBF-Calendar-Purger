@@ -1,0 +1,17 @@
+domains:
+  - feedbackfruits.com
+
+title_step_prefixes:
+  - Give Feedback
+  - Read Feedback
+  - Hand in
+  - Submissions
+  - Receive Reviews
+  - Reflection
+
+title_suffix_separator: " - "
+
+description_substrings:
+  - feedbackfruits
+
+exclude_title_regex: []

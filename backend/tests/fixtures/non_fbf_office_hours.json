@@ -1,0 +1,7 @@
+{
+  "id": 99001,
+  "title": "Office Hours",
+  "start_at": "2025-09-12T14:00:00-04:00",
+  "description": "Weekly office hours in room 101",
+  "workflow_state": "active"
+}

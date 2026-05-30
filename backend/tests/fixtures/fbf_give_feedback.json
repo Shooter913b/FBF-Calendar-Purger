@@ -1,0 +1,10 @@
+{
+  "id": 88421,
+  "title": "Give Feedback - Peer Review Essay 1",
+  "start_at": "2025-09-10T23:59:00-04:00",
+  "end_at": "2025-09-10T23:59:00-04:00",
+  "description": "<a href=\"https://app.feedbackfruits.com/activities/abc123\">Open assignment</a>",
+  "html_url": "https://canvas.example.edu/calendar?event_id=88421",
+  "context_code": "course_12345",
+  "workflow_state": "active"
+}
