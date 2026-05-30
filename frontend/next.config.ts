@@ -3,17 +3,24 @@ import type { NextConfig } from "next";
 const backendUrl =
   process.env.NEXT_PUBLIC_BACKEND_URL ?? "http://localhost:8000";
 
+const isNetlify = process.env.NETLIFY === "true";
+const isDocker = process.env.DOCKER_BUILD === "true";
+
 const nextConfig: NextConfig = {
-  // Standalone is for Docker only; Netlify uses @netlify/plugin-nextjs instead.
-  ...(process.env.DOCKER_BUILD === "true" ? { output: "standalone" as const } : {}),
-  async rewrites() {
-    return [
-      {
-        source: "/api/:path*",
-        destination: `${backendUrl}/api/:path*`,
-      },
-    ];
-  },
+  ...(isDocker ? { output: "standalone" as const } : {}),
+  ...(isNetlify ? { output: "export" as const } : {}),
+  ...(!isNetlify
+    ? {
+        async rewrites() {
+          return [
+            {
+              source: "/api/:path*",
+              destination: `${backendUrl}/api/:path*`,
+            },
+          ];
+        },
+      }
+    : {}),
 };
 
 export default nextConfig;

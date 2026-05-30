@@ -1,0 +1,4 @@
+# Netlify: static export to out/ (no serverless functions required).
+[build]
+  command = "npm run build"
+  publish = "out"
