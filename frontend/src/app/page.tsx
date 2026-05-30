@@ -4,6 +4,7 @@ import { Suspense, useCallback, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { EventTable } from "@/components/EventTable";
 import { EmbedVideo } from "@/components/EmbedVideo";
+import { ScanSlowNotice } from "@/components/ScanSlowNotice";
 import { SignInPanel } from "@/components/SignInPanel";
 import {
   ApiRequestError,
@@ -47,6 +48,7 @@ function PurgeTool() {
   const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
   const [authConfig, setAuthConfig] = useState<AuthConfig | null>(null);
   const [showMainVideo, setShowMainVideo] = useState(Boolean(MAIN_VIDEO_URL?.trim()));
+  const [showSlowScanNotice, setShowSlowScanNotice] = useState(false);
 
   const authError = searchParams.get("auth_error");
 
@@ -105,10 +107,20 @@ function PurgeTool() {
       });
   }, [loadCourses]);
 
+  useEffect(() => {
+    if (!scanning) {
+      setShowSlowScanNotice(false);
+      return;
+    }
+    const timer = window.setTimeout(() => setShowSlowScanNotice(true), 10_000);
+    return () => window.clearTimeout(timer);
+  }, [scanning]);
+
   const handleScan = async () => {
     const id = Number(courseId);
     if (!id) return;
     setShowMainVideo(false);
+    setShowSlowScanNotice(false);
     setScanning(true);
     setError(null);
     setPreview(null);
@@ -194,6 +206,11 @@ function PurgeTool() {
 
   return (
     <div className="space-y-6">
+      <ScanSlowNotice
+        open={showSlowScanNotice && scanning}
+        onDismiss={() => setShowSlowScanNotice(false)}
+      />
+
       <div className="flex items-center justify-between gap-4">
         <h1 className="text-xl font-semibold">FBF Calendar Purger</h1>
         <div className="flex items-center gap-3 text-sm text-slate-600">
