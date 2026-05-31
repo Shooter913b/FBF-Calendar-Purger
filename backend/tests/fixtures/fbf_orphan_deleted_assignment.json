@@ -1,0 +1,10 @@
+{
+  "id": 99001,
+  "title": "Give Feedback - Deleted Assignment",
+  "start_at": "2025-09-10T23:59:00-04:00",
+  "end_at": "2025-09-10T23:59:00-04:00",
+  "description": "<a href=\"https://canvas.wisc.edu/courses/12345/assignments/99999\">Open assignment</a>",
+  "html_url": "https://canvas.wisc.edu/calendar?event_id=99001",
+  "context_code": "course_12345",
+  "workflow_state": "active"
+}
