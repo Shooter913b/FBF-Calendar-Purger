@@ -4,6 +4,7 @@ import { Suspense, useCallback, useEffect, useState } from "react";
 import { useSearchParams } from "next/navigation";
 import { EventTable } from "@/components/EventTable";
 import { EmbedVideo } from "@/components/EmbedVideo";
+import { FaqLink } from "@/components/FaqLink";
 import { ScanSlowNotice } from "@/components/ScanSlowNotice";
 import { SignInPanel } from "@/components/SignInPanel";
 import {
@@ -369,6 +370,8 @@ function PurgeTool() {
         Removes Feedback Fruits calendar entries only—not Canvas assignments or FBF activities.
         Orphaned events point at a Canvas assignment that no longer exists.
       </p>
+
+      <FaqLink />
     </div>
   );
 }

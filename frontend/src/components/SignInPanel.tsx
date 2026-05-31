@@ -2,6 +2,7 @@
 
 import { FormEvent, useState } from "react";
 import { EmbedVideo } from "@/components/EmbedVideo";
+import { FaqLink } from "@/components/FaqLink";
 import {
   type AuthConfig,
   formatApiError,
@@ -109,6 +110,8 @@ export function SignInPanel({
           </a>
         </div>
       )}
+
+      <FaqLink />
     </div>
   );
 }
