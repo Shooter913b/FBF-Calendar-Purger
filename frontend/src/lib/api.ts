@@ -172,12 +172,22 @@ export async function executePurge(
 }
 
 export function downloadReportCsv(report: PurgeReport, filename: string): void {
-  const headers = ["event_id", "title", "start_at", "status", "error_message"];
+  const headers = [
+    "event_id",
+    "title",
+    "start_at",
+    "link_status",
+    "canvas_assignment_id",
+    "status",
+    "error_message",
+  ];
   const rows = report.events.map((e) =>
     [
       e.event_id,
       `"${(e.title ?? "").replace(/"/g, '""')}"`,
       e.start_at ?? "",
+      e.link_status ?? "",
+      e.canvas_assignment_id ?? "",
       e.status,
       `"${(e.error_message ?? "").replace(/"/g, '""')}"`,
     ].join(","),

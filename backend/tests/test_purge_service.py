@@ -22,6 +22,7 @@ async def test_preview_purge_matched_only(patterns):
             _event_from_fixture("non_fbf_office_hours.json"),
         ]
     )
+    client.list_active_assignment_ids = AsyncMock(return_value=set())
 
     report = await preview_purge(client, 1, patterns)
     assert report.dry_run is True
@@ -37,6 +38,7 @@ async def test_execute_purge_deletes_selected_only(patterns):
     client = MagicMock()
     client.get_course = AsyncMock(return_value=Course(id=1, name="Test Course"))
     client.list_calendar_events = AsyncMock(return_value=[fbf1, fbf2])
+    client.list_active_assignment_ids = AsyncMock(return_value=set())
     client.delete_calendar_event = AsyncMock(return_value={})
 
     report = await execute_purge(client, 1, patterns, event_ids=[fbf1.id])
@@ -50,6 +52,7 @@ async def test_execute_purge_deletes_fbf_only(patterns):
     client = MagicMock()
     client.get_course = AsyncMock(return_value=Course(id=1, name="Test Course"))
     client.list_calendar_events = AsyncMock(return_value=[fbf])
+    client.list_active_assignment_ids = AsyncMock(return_value=set())
     client.delete_calendar_event = AsyncMock(return_value={})
 
     report = await execute_purge(client, 1, patterns)

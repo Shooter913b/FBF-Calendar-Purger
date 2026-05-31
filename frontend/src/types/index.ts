@@ -11,6 +11,9 @@ export interface PurgeEventResult {
   status: "matched" | "deleted" | "failed" | "skipped";
   match_reason?: string | null;
   error_message?: string | null;
+  link_status?: "orphan" | "linked" | "unknown" | null;
+  link_reason?: string | null;
+  canvas_assignment_id?: number | null;
 }
 
 export interface PurgeReport {
@@ -18,6 +21,7 @@ export interface PurgeReport {
   course_name: string;
   dry_run: boolean;
   matched_count: number;
+  orphan_count: number;
   deleted_count: number;
   failed_count: number;
   events: PurgeEventResult[];

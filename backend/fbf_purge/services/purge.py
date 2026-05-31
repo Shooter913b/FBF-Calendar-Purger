@@ -3,6 +3,7 @@ from datetime import datetime, timezone
 from fbf_purge.canvas.client import CanvasClient
 from fbf_purge.canvas.models import PurgeEventResult, PurgeReport
 from fbf_purge.classifier.patterns import Patterns
+from fbf_purge.classifier.links import classify_event_link
 from fbf_purge.classifier.rules import classify_event
 from fbf_purge.exceptions import CanvasAPIError, FBFError
 
@@ -15,11 +16,16 @@ async def preview_purge(
     started = datetime.now(timezone.utc)
     course = await client.get_course(course_id)
     all_events = await client.list_calendar_events(course_id)
+    active_assignment_ids = await client.list_active_assignment_ids(course_id)
 
     results: list[PurgeEventResult] = []
     for event in all_events:
         is_fbf, reason = classify_event(event, patterns)
         if is_fbf:
+            link_status, link_reason, canvas_assignment_id = classify_event_link(
+                event,
+                active_assignment_ids,
+            )
             results.append(
                 PurgeEventResult(
                     event_id=event.id,
@@ -27,15 +33,20 @@ async def preview_purge(
                     start_at=event.start_at,
                     status="matched",
                     match_reason=reason,
+                    link_status=link_status,
+                    link_reason=link_reason,
+                    canvas_assignment_id=canvas_assignment_id,
                 )
             )
 
+    orphan_count = sum(1 for r in results if r.link_status == "orphan")
     finished = datetime.now(timezone.utc)
     return PurgeReport(
         course_id=course_id,
         course_name=course.name,
         dry_run=True,
         matched_count=len(results),
+        orphan_count=orphan_count,
         deleted_count=0,
         failed_count=0,
         events=results,
@@ -108,6 +119,7 @@ async def execute_purge(
         course_name=course.name,
         dry_run=False,
         matched_count=len(results),
+        orphan_count=0,
         deleted_count=deleted_count,
         failed_count=failed_count,
         events=results,

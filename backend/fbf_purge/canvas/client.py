@@ -124,6 +124,15 @@ class CanvasClient:
             events.append(CalendarEvent.from_canvas(item))
         return events
 
+    async def list_active_assignment_ids(self, course_id: int) -> set[int]:
+        ids: set[int] = set()
+        params = {"per_page": 100}
+        async for item in self.paginate(f"/courses/{course_id}/assignments", params=params):
+            if item.get("workflow_state") == "deleted":
+                continue
+            ids.add(int(item["id"]))
+        return ids
+
     async def delete_calendar_event(self, event_id: int) -> dict:
         response = await self.delete(f"/calendar_events/{event_id}")
         return response.json()

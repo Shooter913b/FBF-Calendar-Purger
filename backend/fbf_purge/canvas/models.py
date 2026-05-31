@@ -4,6 +4,9 @@ from typing import Literal
 from pydantic import BaseModel, Field
 
 
+LinkStatus = Literal["orphan", "linked", "unknown"]
+
+
 class CalendarEvent(BaseModel):
     id: int
     title: str | None = None
@@ -58,6 +61,9 @@ class PurgeEventResult(BaseModel):
     status: PurgeEventStatus
     match_reason: str | None = None
     error_message: str | None = None
+    link_status: LinkStatus | None = None
+    link_reason: str | None = None
+    canvas_assignment_id: int | None = None
 
 
 class PurgeReport(BaseModel):
@@ -65,6 +71,7 @@ class PurgeReport(BaseModel):
     course_name: str
     dry_run: bool
     matched_count: int
+    orphan_count: int = 0
     deleted_count: int
     failed_count: int
     events: list[PurgeEventResult] = Field(default_factory=list)

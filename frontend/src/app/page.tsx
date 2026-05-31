@@ -49,6 +49,7 @@ function PurgeTool() {
   const [authConfig, setAuthConfig] = useState<AuthConfig | null>(null);
   const [showMainVideo, setShowMainVideo] = useState(Boolean(MAIN_VIDEO_URL?.trim()));
   const [showSlowScanNotice, setShowSlowScanNotice] = useState(false);
+  const [roguesOnly, setRoguesOnly] = useState(true);
 
   const authError = searchParams.get("auth_error");
 
@@ -147,7 +148,9 @@ function PurgeTool() {
 
   const selectAllEvents = () => {
     if (!preview) return;
-    setSelectedIds(new Set(preview.events.map((e) => e.event_id)));
+    const pool =
+      roguesOnly ? preview.events.filter((e) => e.link_status === "orphan") : preview.events;
+    setSelectedIds(new Set(pool.map((e) => e.event_id)));
   };
 
   const clearSelection = () => setSelectedIds(new Set());
@@ -188,6 +191,11 @@ function PurgeTool() {
   };
 
   const displayReport = result ?? preview;
+
+  const visibleEvents =
+    preview && !result && roguesOnly
+      ? preview.events.filter((e) => e.link_status === "orphan")
+      : displayReport?.events ?? [];
 
   if (authed === null) {
     return <p className="text-sm text-slate-500">Loading…</p>;
@@ -272,21 +280,34 @@ function PurgeTool() {
       )}
 
       {preview && !result && (
-        <p className="text-sm text-slate-600">
-          {preview.matched_count === 0
-            ? "No Feedback Fruits calendar events found."
-            : `Found ${preview.matched_count} event${preview.matched_count === 1 ? "" : "s"}. Click rows to select which to delete.`}
-          {preview.matched_count > 0 && (
-            <span className="ml-2 text-slate-500">
-              ({selectedIds.size} selected)
-            </span>
-          )}
-        </p>
+        <>
+          <p className="text-sm text-slate-600">
+            {preview.matched_count === 0
+              ? "No Feedback Fruits calendar events found."
+              : roguesOnly
+                ? preview.orphan_count === 0
+                  ? `Found ${preview.matched_count} FBF event${preview.matched_count === 1 ? "" : "s"}, but none are orphaned (deleted assignment). Turn off the filter to see all.`
+                  : `Showing ${visibleEvents.length} orphaned event${visibleEvents.length === 1 ? "" : "s"} (${preview.matched_count} FBF total). Click rows to select which to delete.`
+                : `Found ${preview.matched_count} event${preview.matched_count === 1 ? "" : "s"}. Click rows to select which to delete.`}
+            {visibleEvents.length > 0 && (
+              <span className="ml-2 text-slate-500">({selectedIds.size} selected)</span>
+            )}
+          </p>
+          <label className="flex items-center gap-2 text-sm text-slate-700">
+            <input
+              type="checkbox"
+              checked={roguesOnly}
+              onChange={(e) => setRoguesOnly(e.target.checked)}
+              className="h-4 w-4"
+            />
+            Show orphaned events only (deleted Canvas assignment)
+          </label>
+        </>
       )}
 
-      {displayReport && displayReport.events.length > 0 && (
+      {displayReport && visibleEvents.length > 0 && (
         <>
-          {preview && !result && preview.matched_count > 0 && (
+          {preview && !result && visibleEvents.length > 0 && (
             <div className="flex flex-wrap gap-2">
               <button
                 type="button"
@@ -306,14 +327,15 @@ function PurgeTool() {
             </div>
           )}
           <EventTable
-            events={displayReport.events}
+            events={visibleEvents}
             showStatus={!!result}
+            showLinkStatus={!!preview && !result}
             selectable={!!preview && !result}
             selectedIds={selectedIds}
             onToggle={toggleEvent}
           />
           <div className="flex flex-wrap gap-3">
-            {preview && preview.matched_count > 0 && (
+            {preview && visibleEvents.length > 0 && (
               <button
                 type="button"
                 onClick={handleDelete}
@@ -345,6 +367,7 @@ function PurgeTool() {
 
       <p className="text-xs text-slate-400">
         Removes Feedback Fruits calendar entries only—not Canvas assignments or FBF activities.
+        Orphaned events point at a Canvas assignment that no longer exists.
       </p>
     </div>
   );

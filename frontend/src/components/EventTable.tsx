@@ -1,15 +1,24 @@
 import { formatEventDate } from "@/lib/api";
 import type { PurgeEventResult } from "@/types";
 
+function linkStatusLabel(status: PurgeEventResult["link_status"]): string | null {
+  if (status === "orphan") return "Orphan";
+  if (status === "linked") return "Linked";
+  if (status === "unknown") return "Unknown link";
+  return null;
+}
+
 export function EventTable({
   events,
   showStatus = false,
+  showLinkStatus = false,
   selectable = false,
   selectedIds,
   onToggle,
 }: {
   events: PurgeEventResult[];
   showStatus?: boolean;
+  showLinkStatus?: boolean;
   selectable?: boolean;
   selectedIds?: Set<number>;
   onToggle?: (eventId: number) => void;
@@ -28,6 +37,7 @@ export function EventTable({
             {selectable && <th className="w-10 px-3 py-2" aria-label="Select" />}
             <th className="px-3 py-2 font-medium">Date</th>
             <th className="px-3 py-2 font-medium">Title</th>
+            {showLinkStatus && <th className="px-3 py-2 font-medium">Assignment</th>}
             {showStatus && <th className="px-3 py-2 font-medium">Status</th>}
           </tr>
         </thead>
@@ -60,6 +70,24 @@ export function EventTable({
                 )}
                 <td className="whitespace-nowrap px-3 py-2">{formatEventDate(ev.start_at)}</td>
                 <td className="px-3 py-2">{ev.title ?? "—"}</td>
+                {showLinkStatus && (
+                  <td className="px-3 py-2">
+                    {linkStatusLabel(ev.link_status) && (
+                      <span
+                        title={ev.link_reason ?? undefined}
+                        className={`inline-block rounded px-2 py-0.5 text-xs ${
+                          ev.link_status === "orphan"
+                            ? "bg-amber-100 text-amber-900"
+                            : ev.link_status === "linked"
+                              ? "bg-green-100 text-green-900"
+                              : "bg-slate-100 text-slate-700"
+                        }`}
+                      >
+                        {linkStatusLabel(ev.link_status)}
+                      </span>
+                    )}
+                  </td>
+                )}
                 {showStatus && (
                   <td className="px-3 py-2 text-slate-600">{ev.status}</td>
                 )}
