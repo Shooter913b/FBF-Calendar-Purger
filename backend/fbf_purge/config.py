@@ -40,6 +40,7 @@ class Settings(BaseSettings):
     rate_limit_requests_per_second: float = 8.0
     log_level: str = "INFO"
     enable_inspect: bool = False
+    visitor_store_path: str = "data/visitors.json"
 
     def resolved_patterns_path(self) -> Path:
         path = Path(self.fbf_patterns_path)
@@ -67,6 +68,13 @@ class Settings(BaseSettings):
             f"FBF patterns file not found (tried {self.fbf_patterns_path}). "
             f"Set FBF_PATTERNS_PATH in .env or add {backend_root / 'config' / 'fbf_patterns.yaml'}"
         )
+
+    def resolved_visitor_store_path(self) -> Path:
+        path = Path(self.visitor_store_path)
+        if path.is_absolute():
+            return path
+        backend_root = Path(__file__).resolve().parent.parent
+        return backend_root / path
 
 
 @lru_cache

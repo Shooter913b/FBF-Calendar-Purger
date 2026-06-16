@@ -1,6 +1,6 @@
 "use client";
 
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 import { EmbedVideo } from "@/components/EmbedVideo";
 import { FaqLink } from "@/components/FaqLink";
 import {
@@ -8,6 +8,7 @@ import {
   formatApiError,
   getLoginUrl,
   loginWithAccessToken,
+  registerVisitor,
 } from "@/lib/api";
 import { SIGN_IN_VIDEO_URL } from "@/lib/videoEmbed";
 
@@ -25,6 +26,15 @@ export function SignInPanel({
   const [token, setToken] = useState("");
   const [tokenError, setTokenError] = useState<string | null>(null);
   const [tokenLoading, setTokenLoading] = useState(false);
+  const [lifetimeUsers, setLifetimeUsers] = useState<number | null>(null);
+
+  useEffect(() => {
+    registerVisitor()
+      .then((stats) => setLifetimeUsers(stats.lifetime_users))
+      .catch(() => {
+        // Ignore — stats are optional when the backend is down.
+      });
+  }, []);
 
   const handleTokenSubmit = async (e: FormEvent) => {
     e.preventDefault();
@@ -97,6 +107,12 @@ export function SignInPanel({
           </button>
         </form>
       </div>
+
+      {lifetimeUsers !== null && (
+        <p className="text-xs text-slate-500">
+          {lifetimeUsers.toLocaleString()} lifetime {lifetimeUsers === 1 ? "user" : "users"}
+        </p>
+      )}
 
       {authConfig?.oauth_enabled && (
         <div className="rounded border border-slate-200 p-4">

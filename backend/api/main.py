@@ -6,7 +6,8 @@ from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
 from starlette.middleware.sessions import SessionMiddleware
 
-from api.routes import auth, courses, health, purge
+from api.routes import auth, courses, health, purge, stats
+from api.visitor_store import VisitorStore
 from fbf_purge.classifier.patterns import load_patterns
 from fbf_purge.config import get_settings
 from fbf_purge.exceptions import CanvasAPIError, CanvasAuthError, CanvasNotFoundError
@@ -23,6 +24,7 @@ async def lifespan(app: FastAPI):
     logger.info("Loading FBF patterns from %s", patterns_path)
     app.state.settings = settings
     app.state.patterns = load_patterns(patterns_path)
+    app.state.visitor_store = VisitorStore(settings.resolved_visitor_store_path())
     yield
 
 
@@ -48,6 +50,7 @@ app.add_middleware(
 )
 
 app.include_router(health.router)
+app.include_router(stats.router)
 app.include_router(auth.router)
 app.include_router(courses.router)
 app.include_router(purge.router)

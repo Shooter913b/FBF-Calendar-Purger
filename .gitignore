@@ -14,5 +14,6 @@ frontend/public/_redirects
 dist/
 *.egg-info/
 .DS_Store
+data/
 *.csv
 !backend/tests/fixtures/

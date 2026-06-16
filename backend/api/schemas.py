@@ -64,3 +64,7 @@ class ErrorResponse(BaseModel):
 
 class HealthResponse(BaseModel):
     status: str
+
+
+class VisitorStatsResponse(BaseModel):
+    lifetime_users: int

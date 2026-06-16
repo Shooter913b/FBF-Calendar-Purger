@@ -135,6 +135,14 @@ export async function getAuthConfig(): Promise<AuthConfig> {
   return apiFetch<AuthConfig>("/api/auth/config");
 }
 
+export interface VisitorStats {
+  lifetime_users: number;
+}
+
+export async function registerVisitor(): Promise<VisitorStats> {
+  return apiFetch<VisitorStats>("/api/stats/visitors");
+}
+
 export async function loginWithAccessToken(accessToken: string): Promise<AuthMe> {
   return apiFetch<AuthMe>("/api/auth/token", {
     method: "POST",
