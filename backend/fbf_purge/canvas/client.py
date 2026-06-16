@@ -6,7 +6,7 @@ from typing import Any
 import httpx
 from tenacity import retry, retry_if_exception, stop_after_attempt, wait_exponential
 
-from fbf_purge.canvas.models import CalendarEvent, Course
+from fbf_purge.canvas.models import AppointmentGroup, CalendarEvent, Course
 from fbf_purge.exceptions import CanvasAPIError, CanvasAuthError, CanvasNotFoundError
 
 
@@ -112,29 +112,68 @@ class CanvasClient:
                 yield data
             next_url = _parse_link_header(response.headers.get("Link"))
 
-    async def list_calendar_events(self, course_id: int) -> list[CalendarEvent]:
+    async def _list_calendar_events_by_type(
+        self,
+        course_id: int,
+        event_type: str,
+    ) -> list[CalendarEvent]:
         events: list[CalendarEvent] = []
         params = {
-            "type": "event",
+            "type": event_type,
             "context_codes[]": f"course_{course_id}",
-            "all_events": "true",
+            "all_events": True,
             "per_page": 100,
         }
         async for item in self.paginate("/calendar_events", params=params):
             events.append(CalendarEvent.from_canvas(item))
         return events
 
-    async def list_active_assignment_ids(self, course_id: int) -> set[int]:
-        ids: set[int] = set()
+    async def list_calendar_events(self, course_id: int) -> list[CalendarEvent]:
+        """Custom course calendar events (type=event). FBF and human events share this type."""
+        return await self._list_calendar_events_by_type(course_id, "event")
+
+    async def list_assignment_calendar_events(self, course_id: int) -> list[CalendarEvent]:
+        """Assignment due dates on the course calendar (type=assignment)."""
+        return await self._list_calendar_events_by_type(course_id, "assignment")
+
+    async def list_appointment_groups(self, course_id: int) -> list[AppointmentGroup]:
+        """Signup sheets / office hours (e.g. /appointment_groups/:id)."""
+        groups: list[AppointmentGroup] = []
+        params = {
+            "context_codes[]": f"course_{course_id}",
+            "scope": "manageable",
+            "include_past_appointments": True,
+            "per_page": 100,
+        }
+        async for item in self.paginate("/appointment_groups", params=params):
+            groups.append(AppointmentGroup.from_canvas(item))
+        return groups
+
+    async def list_course_external_tools(self, course_id: int) -> list[dict]:
+        tools: list[dict] = []
+        params = {"per_page": 100}
+        async for item in self.paginate(f"/courses/{course_id}/external_tools", params=params):
+            tools.append(item)
+        return tools
+
+    async def list_course_assignments(self, course_id: int) -> list[dict]:
+        assignments: list[dict] = []
         params = {"per_page": 100}
         async for item in self.paginate(f"/courses/{course_id}/assignments", params=params):
             if item.get("workflow_state") == "deleted":
                 continue
-            ids.add(int(item["id"]))
-        return ids
+            assignments.append(item)
+        return assignments
+
+    async def list_active_assignment_ids(self, course_id: int) -> set[int]:
+        return {int(item["id"]) for item in await self.list_course_assignments(course_id)}
 
     async def delete_calendar_event(self, event_id: int) -> dict:
         response = await self.delete(f"/calendar_events/{event_id}")
+        return response.json()
+
+    async def delete_appointment_group(self, group_id: int) -> dict:
+        response = await self.delete(f"/appointment_groups/{group_id}")
         return response.json()
 
     async def get_course(self, course_id: int) -> Course:

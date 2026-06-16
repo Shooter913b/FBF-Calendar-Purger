@@ -19,6 +19,7 @@ import {
   listCourses,
   logout,
   previewPurge,
+  shouldShowWithPastFilter,
 } from "@/lib/api";
 import { MAIN_VIDEO_URL } from "@/lib/videoEmbed";
 import type { Course, PurgeReport } from "@/types";
@@ -50,7 +51,9 @@ function PurgeTool() {
   const [authConfig, setAuthConfig] = useState<AuthConfig | null>(null);
   const [showMainVideo, setShowMainVideo] = useState(Boolean(MAIN_VIDEO_URL?.trim()));
   const [showSlowScanNotice, setShowSlowScanNotice] = useState(false);
-  const [roguesOnly, setRoguesOnly] = useState(true);
+  const [pastOnly, setPastOnly] = useState(true);
+  const [hideLinked, setHideLinked] = useState(true);
+  const [hideAssignmentDue, setHideAssignmentDue] = useState(false);
 
   const authError = searchParams.get("auth_error");
 
@@ -149,9 +152,7 @@ function PurgeTool() {
 
   const selectAllEvents = () => {
     if (!preview) return;
-    const pool =
-      roguesOnly ? preview.events.filter((e) => e.link_status === "orphan") : preview.events;
-    setSelectedIds(new Set(pool.map((e) => e.event_id)));
+    setSelectedIds(new Set(visibleEvents.map((e) => e.event_id)));
   };
 
   const clearSelection = () => setSelectedIds(new Set());
@@ -162,7 +163,7 @@ function PurgeTool() {
     if (ids.length === 0) return;
     if (
       !window.confirm(
-        `Delete ${ids.length} selected Feedback Fruits calendar event${ids.length === 1 ? "" : "s"}?`,
+        `Delete ${ids.length} selected calendar event${ids.length === 1 ? "" : "s"}?`,
       )
     ) {
       return;
@@ -193,10 +194,23 @@ function PurgeTool() {
 
   const displayReport = result ?? preview;
 
+  const allEvents = displayReport?.events ?? [];
+  const fbfEvents = allEvents.filter((e) => (e.event_category ?? "fbf") === "fbf");
+  const userEvents = allEvents.filter((e) => e.event_category === "user");
+
+  const applyFilters = (events: typeof allEvents) =>
+    events.filter((e) => {
+      if (hideAssignmentDue && e.calendar_entry_kind === "assignment_due") return false;
+      if (!shouldShowWithPastFilter(e, pastOnly)) return false;
+      if (hideLinked && (e.link_status === "linked" || e.link_status === "unlinked")) return false;
+      return true;
+    });
+
   const visibleEvents =
-    preview && !result && roguesOnly
-      ? preview.events.filter((e) => e.link_status === "orphan")
-      : displayReport?.events ?? [];
+    preview && !result ? applyFilters(allEvents) : allEvents;
+
+  const filteredFbfCount = applyFilters(fbfEvents).length;
+  const filteredUserCount = applyFilters(userEvents).length;
 
   if (authed === null) {
     return <p className="text-sm text-slate-500">Loading…</p>;
@@ -283,26 +297,44 @@ function PurgeTool() {
       {preview && !result && (
         <>
           <p className="text-sm text-slate-600">
-            {preview.matched_count === 0
-              ? "No Feedback Fruits calendar events found."
-              : roguesOnly
-                ? preview.orphan_count === 0
-                  ? `Found ${preview.matched_count} FBF event${preview.matched_count === 1 ? "" : "s"}, but none are orphaned (deleted assignment). Turn off the filter to see all.`
-                  : `Showing ${visibleEvents.length} orphaned event${visibleEvents.length === 1 ? "" : "s"} (${preview.matched_count} FBF total). Click rows to select which to delete.`
-                : `Found ${preview.matched_count} event${preview.matched_count === 1 ? "" : "s"}. Click rows to select which to delete.`}
+            {allEvents.length === 0
+              ? "No calendar events found."
+              : visibleEvents.length === 0
+                ? `Found ${allEvents.length} event${allEvents.length === 1 ? "" : "s"} (${preview.matched_count} FBF, ${preview.user_count ?? userEvents.length} user), but none match the current filters. Adjust filters to see more.`
+                : `Showing ${visibleEvents.length} event${visibleEvents.length === 1 ? "" : "s"} (${filteredFbfCount} FBF, ${filteredUserCount} user). Select rows to delete.`}
             {visibleEvents.length > 0 && (
               <span className="ml-2 text-slate-500">({selectedIds.size} selected)</span>
             )}
           </p>
-          <label className="flex items-center gap-2 text-sm text-slate-700">
-            <input
-              type="checkbox"
-              checked={roguesOnly}
-              onChange={(e) => setRoguesOnly(e.target.checked)}
-              className="h-4 w-4"
-            />
-            Show orphaned events only (deleted Canvas assignment)
-          </label>
+          <div className="flex flex-col gap-2">
+            <label className="flex items-center gap-2 text-sm text-slate-700">
+              <input
+                type="checkbox"
+                checked={pastOnly}
+                onChange={(e) => setPastOnly(e.target.checked)}
+                className="h-4 w-4"
+              />
+              Show past events only
+            </label>
+            <label className="flex items-center gap-2 text-sm text-slate-700">
+              <input
+                type="checkbox"
+                checked={hideLinked}
+                onChange={(e) => setHideLinked(e.target.checked)}
+                className="h-4 w-4"
+              />
+              Hide events linked to an active assignment
+            </label>
+            <label className="flex items-center gap-2 text-sm text-slate-700">
+              <input
+                type="checkbox"
+                checked={hideAssignmentDue}
+                onChange={(e) => setHideAssignmentDue(e.target.checked)}
+                className="h-4 w-4"
+              />
+              Hide assignment-type calendar entries
+            </label>
+          </div>
         </>
       )}
 
@@ -329,6 +361,7 @@ function PurgeTool() {
           )}
           <EventTable
             events={visibleEvents}
+            showCategory={!!preview && !result}
             showStatus={!!result}
             showLinkStatus={!!preview && !result}
             selectable={!!preview && !result}
@@ -366,9 +399,23 @@ function PurgeTool() {
         </>
       )}
 
+      {displayReport && visibleEvents.length === 0 && allEvents.length > 0 && (
+        <button
+          type="button"
+          onClick={() =>
+            downloadReportCsv(
+              displayReport,
+              result ? `fbf-purge-${displayReport.course_id}.csv` : `fbf-preview-${displayReport.course_id}.csv`,
+            )
+          }
+          className="rounded border border-slate-300 px-4 py-2 text-sm hover:bg-slate-50"
+        >
+          Download CSV
+        </button>
+      )}
+
       <p className="text-xs text-slate-400">
-        Removes Feedback Fruits calendar entries only—not Canvas assignments or FBF activities.
-        Orphaned events point at a Canvas assignment that no longer exists.
+        Shows Feedback Fruits and user-created calendar entries. Both types can be selected and deleted.
       </p>
 
       <FaqLink />

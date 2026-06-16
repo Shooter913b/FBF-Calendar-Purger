@@ -1,4 +1,4 @@
-import type { ApiError, AuthMe, Course, PurgeReport } from "@/types";
+import type { ApiError, AuthMe, Course, PurgeEventResult, PurgeReport } from "@/types";
 
 /** Server-side / build-time only. Browser uses same-origin `/api/*` via Next.js rewrite. */
 const SERVER_BACKEND_URL =
@@ -176,6 +176,8 @@ export function downloadReportCsv(report: PurgeReport, filename: string): void {
     "event_id",
     "title",
     "start_at",
+    "html_url",
+    "event_category",
     "link_status",
     "canvas_assignment_id",
     "status",
@@ -186,6 +188,8 @@ export function downloadReportCsv(report: PurgeReport, filename: string): void {
       e.event_id,
       `"${(e.title ?? "").replace(/"/g, '""')}"`,
       e.start_at ?? "",
+      e.html_url ?? "",
+      e.event_category ?? "fbf",
       e.link_status ?? "",
       e.canvas_assignment_id ?? "",
       e.status,
@@ -203,10 +207,44 @@ export function downloadReportCsv(report: PurgeReport, filename: string): void {
 
 export function formatEventDate(iso: string | null): string {
   if (!iso) return "—";
-  return new Date(iso).toLocaleString(undefined, {
+  const parsed = new Date(iso);
+  if (Number.isNaN(parsed.getTime())) return "—";
+  const dateOnly = /^\d{4}-\d{2}-\d{2}$/.test(iso);
+  if (dateOnly) {
+    return parsed.toLocaleDateString(undefined, { dateStyle: "medium" });
+  }
+  return parsed.toLocaleString(undefined, {
     dateStyle: "medium",
     timeStyle: "short",
   });
+}
+
+export function isPastEvent(startAt: string | null): boolean {
+  if (!startAt) return false;
+  return new Date(startAt).getTime() < Date.now();
+}
+
+/** Past filter: orphans always show; no-link/assignment-due use assignment due date when available. */
+export function shouldShowWithPastFilter(
+  event: Pick<
+    PurgeEventResult,
+    "link_status" | "start_at" | "assignment_due_at" | "calendar_entry_kind"
+  >,
+  pastOnly: boolean,
+): boolean {
+  if (!pastOnly) return true;
+  if (event.link_status === "orphan") return true;
+  const dateForFilter =
+    event.link_status === "unlinked" || event.calendar_entry_kind === "assignment_due"
+      ? (event.assignment_due_at ?? event.start_at)
+      : event.start_at;
+  return isPastEvent(dateForFilter);
+}
+
+export function isAssignmentDueEntry(
+  event: Pick<PurgeEventResult, "calendar_entry_kind">,
+): boolean {
+  return event.calendar_entry_kind === "assignment_due";
 }
 
 export function formatApiError(err: unknown): string {

@@ -1,0 +1,11 @@
+{
+  "id": 101,
+  "name": "Peer Review Essay 1",
+  "due_at": "2025-09-10T23:59:00-04:00",
+  "workflow_state": "published",
+  "submission_types": ["external_tool"],
+  "external_tool_tag_attributes": {
+    "url": "https://canvas.wisc.edu/api/v1/accounts/1/external_tools/456",
+    "new_tab": false
+  }
+}

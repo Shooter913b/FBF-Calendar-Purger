@@ -17,8 +17,9 @@ export default function FaqPage() {
           What about linked assignments?
         </h2>
         <p className="text-sm text-slate-600">
-          When you turn off <strong>orphaned events only</strong>, some calendar entries show as{" "}
-          <strong>Linked</strong>. Those are different from orphans.
+          Use <strong>Hide events linked to an active assignment</strong> to focus on orphaned FBF
+          entries and standalone calendar events. Turn it off to also see linked FBF events and
+          Canvas assignment due dates.
         </p>
         <ol className="list-decimal space-y-3 pl-5 text-sm text-slate-700">
           <li>

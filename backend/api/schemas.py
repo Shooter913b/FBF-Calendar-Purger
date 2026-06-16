@@ -21,6 +21,7 @@ class PurgeReportOut(BaseModel):
     dry_run: bool
     matched_count: int
     orphan_count: int = 0
+    user_count: int = 0
     deleted_count: int
     failed_count: int
     events: list[PurgeEventResult]
@@ -36,6 +37,7 @@ class PurgeReportOut(BaseModel):
             dry_run=report.dry_run,
             matched_count=report.matched_count,
             orphan_count=report.orphan_count,
+            user_count=report.user_count,
             deleted_count=report.deleted_count,
             failed_count=report.failed_count,
             events=report.events,

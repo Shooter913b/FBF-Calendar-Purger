@@ -30,9 +30,13 @@ async def purge_preview(
 ) -> PurgeReportOut:
     try:
         report = await preview_purge(client, course_id, patterns)
-        event_ids = [e.event_id for e in report.events]
+        preview_event_ids = [e.event_id for e in report.events]
         store = _preview_store(settings)
-        report.preview_token = store.create_token(course_id, report.matched_count, event_ids)
+        report.preview_token = store.create_token(
+            course_id,
+            len(preview_event_ids),
+            preview_event_ids,
+        )
         logger.info(
             "preview course_id=%s matched_count=%s",
             course_id,

@@ -1,7 +1,12 @@
 import pytest
 
 from fbf_purge.canvas.models import CalendarEvent
-from fbf_purge.classifier.links import classify_event_link, parse_canvas_assignment_id
+from fbf_purge.classifier.links import (
+    classify_event_assignment_link,
+    classify_inferred_assignment_link,
+    classify_event_link,
+    parse_canvas_assignment_id,
+)
 from tests.conftest import load_fixture
 
 
@@ -23,6 +28,20 @@ def test_classify_orphan():
     assert "no longer exists" in (reason or "")
 
 
+def test_assignment_calendar_item_parses():
+    event = CalendarEvent.from_canvas(load_fixture("canvas_assignment_due.json"))
+    assert event.is_assignment_calendar is True
+    assert event.id == -55001
+    assert parse_canvas_assignment_id(event) == 55001
+
+
+def test_classify_assignment_calendar_linked():
+    event = CalendarEvent.from_canvas(load_fixture("canvas_assignment_due.json"))
+    status, reason, assignment_id = classify_event_link(event, {55001})
+    assert status == "linked"
+    assert assignment_id == 55001
+
+
 def test_classify_linked():
     event = CalendarEvent.from_canvas(load_fixture("fbf_linked_assignment.json"))
     status, reason, assignment_id = classify_event_link(event, {100, 200})
@@ -38,6 +57,25 @@ def test_classify_unknown():
     assert "No Canvas assignment link" in (reason or "")
 
 
+def test_classify_inferred_unlinked():
+    event = CalendarEvent.from_canvas(load_fixture("fbf_unlinked_calendar_event.json"))
+    status, reason, assignment_id = classify_event_assignment_link(
+        event,
+        {100},
+        inferred_assignment_id=100,
+    )
+    assert status == "unlinked"
+    assert assignment_id == 100
+    assert "no link in event" in (reason or "")
+
+
+def test_classify_inferred_orphan():
+    event = CalendarEvent.from_canvas(load_fixture("fbf_unlinked_calendar_event.json"))
+    status, _, assignment_id = classify_inferred_assignment_link(99999, {100})
+    assert status == "orphan"
+    assert assignment_id == 99999
+
+
 @pytest.mark.asyncio
 async def test_preview_marks_orphan_count(patterns):
     from unittest.mock import AsyncMock, MagicMock
@@ -50,7 +88,10 @@ async def test_preview_marks_orphan_count(patterns):
     client = MagicMock()
     client.get_course = AsyncMock(return_value=Course(id=1, name="Test Course"))
     client.list_calendar_events = AsyncMock(return_value=[orphan, linked])
-    client.list_active_assignment_ids = AsyncMock(return_value={100})
+    client.list_assignment_calendar_events = AsyncMock(return_value=[])
+    client.list_appointment_groups = AsyncMock(return_value=[])
+    client.list_course_assignments = AsyncMock(return_value=[{"id": 100, "workflow_state": "published"}])
+    client.list_course_external_tools = AsyncMock(return_value=[])
 
     report = await preview_purge(client, 1, patterns)
     assert report.matched_count == 2

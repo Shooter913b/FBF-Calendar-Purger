@@ -21,8 +21,12 @@ You need **account-level admin** access (or ask your Canvas / EdTech team).
 5. Enable these **scopes**:
 
 - `url:GET|/api/v1/courses`
+- `url:GET|/api/v1/courses/:course_id/assignments`
+- `url:GET|/api/v1/courses/:course_id/external_tools`
 - `url:GET|/api/v1/calendar_events`
 - `url:DELETE|/api/v1/calendar_events/:id`
+- `url:GET|/api/v1/appointment_groups`
+- `url:DELETE|/api/v1/appointment_groups/:id`
 - `url:GET|/api/v1/users/self/profile`
 
 6. Save and **turn the key ON** (Developer Keys list → State → On).

@@ -1,0 +1,11 @@
+{
+  "id": "assignment_55001",
+  "type": "assignment",
+  "title": "Weekly Reading Quiz",
+  "start_at": "2025-09-15T23:59:00-04:00",
+  "end_at": "2025-09-15T23:59:00-04:00",
+  "description": "Complete the reading before class.",
+  "html_url": "https://canvas.example.edu/courses/12345/assignments/55001",
+  "context_code": "course_12345",
+  "workflow_state": "published"
+}

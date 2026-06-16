@@ -73,8 +73,12 @@ http://localhost:3000/api/auth/callback
 ## Canvas API scopes (Developer Key)
 
 - `url:GET|/api/v1/courses`
+- `url:GET|/api/v1/courses/:course_id/assignments`
+- `url:GET|/api/v1/courses/:course_id/external_tools`
 - `url:GET|/api/v1/calendar_events`
 - `url:DELETE|/api/v1/calendar_events/:id`
+- `url:GET|/api/v1/appointment_groups`
+- `url:DELETE|/api/v1/appointment_groups/:id`
 - `url:GET|/api/v1/users/self/profile`
 
 ## Tuning detection

@@ -15,10 +15,14 @@ from tests.conftest import PATTERNS_PATH
 @pytest.fixture
 def mock_client():
     client = MagicMock()
+    client.base_url = "https://canvas.example.edu"
     client.aclose = AsyncMock()
     client.get_course = AsyncMock(return_value=Course(id=1, name="Test Course", course_code="TST-101"))
     client.list_calendar_events = AsyncMock(return_value=[])
-    client.list_active_assignment_ids = AsyncMock(return_value=set())
+    client.list_assignment_calendar_events = AsyncMock(return_value=[])
+    client.list_appointment_groups = AsyncMock(return_value=[])
+    client.list_course_assignments = AsyncMock(return_value=[])
+    client.list_course_external_tools = AsyncMock(return_value=[])
     client.list_courses_for_user = AsyncMock(
         return_value=[Course(id=1, name="Test Course", course_code="TST-101")]
     )
