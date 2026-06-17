@@ -135,12 +135,12 @@ export async function getAuthConfig(): Promise<AuthConfig> {
   return apiFetch<AuthConfig>("/api/auth/config");
 }
 
-export interface VisitorStats {
-  lifetime_users: number;
+export interface VisitStats {
+  lifetime_visits: number;
 }
 
-export async function registerVisitor(): Promise<VisitorStats> {
-  return apiFetch<VisitorStats>("/api/stats/visitors");
+export async function recordVisit(): Promise<VisitStats> {
+  return apiFetch<VisitStats>("/api/stats/visits");
 }
 
 export async function loginWithAccessToken(accessToken: string): Promise<AuthMe> {

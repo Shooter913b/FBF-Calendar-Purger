@@ -8,7 +8,7 @@ import {
   formatApiError,
   getLoginUrl,
   loginWithAccessToken,
-  registerVisitor,
+  recordVisit,
 } from "@/lib/api";
 import { SIGN_IN_VIDEO_URL } from "@/lib/videoEmbed";
 
@@ -26,11 +26,11 @@ export function SignInPanel({
   const [token, setToken] = useState("");
   const [tokenError, setTokenError] = useState<string | null>(null);
   const [tokenLoading, setTokenLoading] = useState(false);
-  const [lifetimeUsers, setLifetimeUsers] = useState<number | null>(null);
+  const [lifetimeVisits, setLifetimeVisits] = useState<number | null>(null);
 
   useEffect(() => {
-    registerVisitor()
-      .then((stats) => setLifetimeUsers(stats.lifetime_users))
+    recordVisit()
+      .then((stats) => setLifetimeVisits(stats.lifetime_visits))
       .catch(() => {
         // Ignore — stats are optional when the backend is down.
       });
@@ -108,9 +108,9 @@ export function SignInPanel({
         </form>
       </div>
 
-      {lifetimeUsers !== null && (
+      {lifetimeVisits !== null && (
         <p className="text-xs text-slate-500">
-          {lifetimeUsers.toLocaleString()} lifetime {lifetimeUsers === 1 ? "user" : "users"}
+          {lifetimeVisits.toLocaleString()} lifetime {lifetimeVisits === 1 ? "visit" : "visits"}
         </p>
       )}
 

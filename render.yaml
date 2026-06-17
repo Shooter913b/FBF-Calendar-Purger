@@ -1,4 +1,4 @@
-# Render Blueprint — attach a persistent disk so visitor stats survive sleep/restarts.
+# Render Blueprint — attach a persistent disk so visit stats survive sleep/restarts.
 # Requires a paid instance (Starter or higher); free tier cannot mount disks.
 # Alternative on free tier: set UPSTASH_REDIS_REST_URL + UPSTASH_REDIS_REST_TOKEN instead.
 services:

@@ -7,7 +7,7 @@ from fastapi.responses import JSONResponse
 from starlette.middleware.sessions import SessionMiddleware
 
 from api.routes import auth, courses, health, purge, stats
-from api.visitor_store import create_visitor_store
+from api.visitor_store import create_visit_counter
 from fbf_purge.classifier.patterns import load_patterns
 from fbf_purge.config import get_settings
 from fbf_purge.exceptions import CanvasAPIError, CanvasAuthError, CanvasNotFoundError
@@ -24,7 +24,7 @@ async def lifespan(app: FastAPI):
     logger.info("Loading FBF patterns from %s", patterns_path)
     app.state.settings = settings
     app.state.patterns = load_patterns(patterns_path)
-    app.state.visitor_store = create_visitor_store(
+    app.state.visitor_store = create_visit_counter(
         store_path=settings.resolved_visitor_store_path(),
         upstash_redis_rest_url=settings.upstash_redis_rest_url,
         upstash_redis_rest_token=settings.upstash_redis_rest_token,

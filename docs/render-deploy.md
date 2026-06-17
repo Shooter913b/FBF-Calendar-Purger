@@ -1,6 +1,6 @@
 # Deploying the backend on Render
 
-Render’s default filesystem is **ephemeral**: when a service sleeps, restarts, or redeploys, files under `/app` are wiped. The visitor counter (`data/visitors.json`) must live on **persistent storage**.
+Render’s default filesystem is **ephemeral**: when a service sleeps, restarts, or redeploys, files under `/app` are wiped. The visit counter (`data/visitors.json`) must live on **persistent storage**.
 
 Choose **one** of the options below (no SQL database required).
 
@@ -33,12 +33,12 @@ Works when the service sleeps on Render’s **free** plan:
    ```
 4. Redeploy.
 
-The app stores anonymous visitor UUIDs in a Redis set (`fbf:visitor_ids`). No names, emails, or Canvas IDs.
+The app increments a simple visit counter on each login page load. No cookies, names, emails, or Canvas IDs are stored.
 
 If both Upstash variables are set, they take priority over the file store.
 
 ## Verify
 
-1. Load the login page — note the lifetime user count.
+1. Load the login page — note the visit count.
 2. Trigger a sleep/restart (or wait for spin-down on free tier).
-3. Reload — the count should **not** reset, and returning browsers should not inflate the total.
+3. Reload — the count should **not** reset. Each page load adds one visit.

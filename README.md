@@ -90,7 +90,7 @@ Optional inspect endpoint: `ENABLE_INSPECT=true` → `GET /api/courses/{id}/insp
 ## Documentation
 
 - [OAuth setup](./docs/oauth-setup.md)
-- [Render deployment](./docs/render-deploy.md) — persistent visitor stats on Render
+- [Render deployment](./docs/render-deploy.md) — persistent visit stats on Render
 - [Tool 1 spec](./docs/tool-1-calendar-purge.md)
 - [Implementation plan](./docs/next-steps.md)
 - [Tool 2 (future)](./docs/tool-2-calendar-sync.md)
