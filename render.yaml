@@ -1,0 +1,20 @@
+# Render Blueprint — attach a persistent disk so visitor stats survive sleep/restarts.
+# Requires a paid instance (Starter or higher); free tier cannot mount disks.
+# Alternative on free tier: set UPSTASH_REDIS_REST_URL + UPSTASH_REDIS_REST_TOKEN instead.
+services:
+  - type: web
+    name: fbf-purge-api
+    runtime: docker
+    dockerfilePath: ./backend/Dockerfile
+    dockerContext: ./backend
+    plan: starter
+    healthCheckPath: /health
+    envVars:
+      - key: VISITOR_STORE_PATH
+        value: /app/data/visitors.json
+      - key: DEV_MODE
+        value: "false"
+    disk:
+      name: visitor-data
+      mountPath: /app/data
+      sizeGB: 1

@@ -18,3 +18,10 @@ def test_resolved_patterns_path_default():
     settings = Settings(fbf_patterns_path="config/fbf_patterns.yaml")
     resolved = settings.resolved_patterns_path()
     assert resolved == backend_root / "config" / "fbf_patterns.yaml"
+
+
+def test_resolved_visitor_store_path_on_render(monkeypatch):
+    monkeypatch.setenv("RENDER", "true")
+    monkeypatch.delenv("VISITOR_STORE_PATH", raising=False)
+    settings = Settings()
+    assert settings.resolved_visitor_store_path() == Path("/app/data/visitors.json")

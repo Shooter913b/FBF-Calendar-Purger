@@ -1,3 +1,4 @@
+import os
 from functools import lru_cache
 from pathlib import Path
 
@@ -41,6 +42,8 @@ class Settings(BaseSettings):
     log_level: str = "INFO"
     enable_inspect: bool = False
     visitor_store_path: str = "data/visitors.json"
+    upstash_redis_rest_url: str = ""
+    upstash_redis_rest_token: str = ""
 
     def resolved_patterns_path(self) -> Path:
         path = Path(self.fbf_patterns_path)
@@ -70,11 +73,22 @@ class Settings(BaseSettings):
         )
 
     def resolved_visitor_store_path(self) -> Path:
-        path = Path(self.visitor_store_path)
-        if path.is_absolute():
-            return path
+        explicit = os.environ.get("VISITOR_STORE_PATH", "").strip()
+        if explicit:
+            return Path(explicit)
+
+        if self.visitor_store_path != "data/visitors.json":
+            path = Path(self.visitor_store_path)
+            if path.is_absolute():
+                return path
+            backend_root = Path(__file__).resolve().parent.parent
+            return backend_root / path
+
+        if os.environ.get("RENDER") == "true":
+            return Path("/app/data/visitors.json")
+
         backend_root = Path(__file__).resolve().parent.parent
-        return backend_root / path
+        return backend_root / "data" / "visitors.json"
 
 
 @lru_cache

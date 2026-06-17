@@ -1,10 +1,16 @@
 import uuid
+from pathlib import Path
 
 import pytest
 from httpx import ASGITransport, AsyncClient
 
 from api.main import app
-from api.visitor_store import VisitorStore, is_valid_visitor_id
+from api.visitor_store import (
+    UpstashVisitorStore,
+    VisitorStore,
+    create_visitor_store,
+    is_valid_visitor_id,
+)
 
 
 def test_is_valid_visitor_id():
@@ -57,3 +63,38 @@ async def test_register_visitor_sets_cookie_and_counts(tmp_path):
         third = await other_client.get("/api/stats/visitors")
         assert third.status_code == 200
         assert third.json()["lifetime_users"] == 2
+
+
+def test_create_visitor_store_prefers_upstash():
+    store = create_visitor_store(
+        store_path=Path("/tmp/visitors.json"),
+        upstash_redis_rest_url="https://example.upstash.io",
+        upstash_redis_rest_token="secret",
+    )
+    assert isinstance(store, UpstashVisitorStore)
+
+
+def test_upstash_visitor_store_register(respx_mock):
+    import httpx
+    import respx
+
+    visitor_id = str(uuid.uuid4())
+    route = respx.post("https://example.upstash.io/").mock(
+        side_effect=[
+            httpx.Response(200, json={"result": 1}),
+            httpx.Response(200, json={"result": 1}),
+            httpx.Response(200, json={"result": 0}),
+            httpx.Response(200, json={"result": 1}),
+        ]
+    )
+    store = UpstashVisitorStore("https://example.upstash.io", "secret")
+
+    count, is_new = store.register(visitor_id)
+    assert count == 1
+    assert is_new is True
+
+    count, is_new = store.register(visitor_id)
+    assert count == 1
+    assert is_new is False
+
+    assert route.call_count == 4
